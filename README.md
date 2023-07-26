@@ -1,0 +1,2 @@
+# OpenGenerationWizardPlugin
+Example WizardDefaults plugin class implementations
