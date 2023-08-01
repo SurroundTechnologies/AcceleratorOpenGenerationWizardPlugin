@@ -241,7 +241,7 @@ namespace GenerationWizardPlugin
             relationships.Add(_AddRelationship("EASYBUYDEM", "YD1C", "YD1CIID", "EASYBUYDEM", "YD1O", "YD1O1CID", SchemaRelationshipType.OneToMany));
             // Customers have One to Many Shipping Addresses
             relationships.Add(_AddRelationship("EASYBUYDEM", "YD1C", "YD1CIID", "EASYBUYDEM", "YD1S", "YD1S1CID", SchemaRelationshipType.OneToMany));
-            // Customers have Customer
+            // Customers have Sub Customers
             relationships.Add(_AddRelationship("EASYBUYDEM", "YD1C", "YD1CIID", "EASYBUYDEM", "YD1C", "YD1CPTID", SchemaRelationshipType.OneToMany));
             // Orders have One to Many Order Items
             relationships.Add(_AddRelationship("EASYBUYDEM", "YD1O", "YD1OIID", "EASYBUYDEM", "YD1I", "YD1I1OID", SchemaRelationshipType.OneToMany));
