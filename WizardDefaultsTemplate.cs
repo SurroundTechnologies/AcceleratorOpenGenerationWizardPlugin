@@ -1,4 +1,5 @@
-﻿using A4DN.CF.WizardShared;
+﻿using A4DN.CF.SchemaEntities;
+using A4DN.CF.WizardShared;
 using A4DN.Core.BOS.Base;
 using A4DN.Core.BOS.FrameworkEntity;
 using System.Collections.Generic;
@@ -14,36 +15,62 @@ namespace GenerationWizardPlugin
         internal enum Mode { InitialSetup, ColumnsChanged };
 
         // Generation Wizard Shared Data
-        internal readonly AB_GenerationWizardShared WizardShared = new AB_GenerationWizardShared();
+        internal AB_GenerationWizardShared _WizardShared;
 
-        /// <summary>
-        /// Accelerator Method <c>am_Initialize</c>: initialize.
-        /// </summary>
-        /// <param name="generationWizardShared">The generation wizard shared.</param>
+        #region Generic Code
+
         public virtual void am_Initialize(AB_GenerationWizardShared generationWizardShared)
         {
+            // Relationships are pulled from the database access routes. If no relationships are defined on the database, you can define the relationships in the _AddDatabaseRelationships method.
+            _AddDatabaseRelationships(generationWizardShared.ap_DatabaseRelationships);
+
+            _WizardShared = generationWizardShared;
         }
 
         /// <summary>
-        /// Accelerator Method <c>am_PromptForKeysIfNoneSpecified</c>: Prompts for keys if none specified on the File/Table.
+        /// Prompts for keys if none specified.
         /// </summary>
-        /// <remarks>This method is called when no keys are found on the table or physical file. Returning True will prompt the user to select the keys. You can set the keys in this method and then return false to not show the prompt</remarks>
+        /// <remarks>This method is called when no keys are found on the physical file. Returning True will prompt the user to select the keys. You can set the keys in this method and then return false to not show the prompt</remarks>
         /// <param name="moduleEntity">The module entity.</param>
-        /// <returns><c>true</c> if you want to prompt the user to specify the keys, <c>false</c> if you can specify the keys in this method.</returns>
+        /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
         public virtual bool am_PromptForKeysIfNoneSpecified(AB_GenerationModuleEntity moduleEntity)
         {
+            #region Example Code
+            //// Use Keys from L1 view if it exists
+            //foreach (var modView in moduleEntity.GenerationModuleExplorers.FirstOrDefault().GenerationModuleExplorerViews)
+            //{
+            //    if (modView.ViewName == moduleEntity.FileName + "L1" || modView.ViewName == moduleEntity.FileName + "L01")
+            //    {
+            //        modView.ViewName = moduleEntity.FileName;
+
+            //        // Set As Default View
+            //        _WizardShared.am_SetDefaultView(modView, moduleEntity);
+
+            //        foreach (var viewCol in modView.GenerationViewColumns)
+            //        {
+            //            var col = moduleEntity.AllColumns.Where(c => c.Name == viewCol.ViewField).FirstOrDefault();
+            //            col.IsKey = true;
+
+            //        }
+
+            //        return false;
+            //    }
+            //}
+
+            #endregion
+
+
             return true;
         }
 
         /// <summary>
-        /// Accelerator Method <c>am_AllowAddModule</c>: intervene with allowing a particular module to be added
+        /// The method is called Before the module is added to the module manager. You can return false if you don't want the module to be added.
         /// </summary>
-        /// <remarks>This method is called Before the module is added to the module manager. You can return false if you don't want the module to be added.</remarks>
         /// <param name="moduleEntity">The module entity.</param>
         /// <returns><c>true</c> if you want to add the module to the module manager, <c>false</c> otherwise.</returns>
         public virtual bool am_AllowAddModule(AB_GenerationModuleEntity moduleEntity)
         {
-            if (moduleEntity.FileName == "sysdiagrams") // Exclude MS SQL Server Catalog Table.
+            if (moduleEntity.FileName == "sysdiagrams")
             {
                 return false;
             }
@@ -52,7 +79,7 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// Accelerator Method <c>am_SetDefaultForModule</c>: Set Default for Module is called when a file is added to the Module Manager.
+        /// am_SetDefaultForModule: Set Default for Module is called when a file is added to the Module Manager.
         /// </summary>
         /// <param name="moduleEntity">Module Entity that is being added to the Module Manager</param>
         /// <returns></returns>
@@ -76,7 +103,7 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// Accelerator Method <c>am_ViewColumnsAddedToModule</c>: View Columns Added to Module is called when a column is added or removed
+        /// am_ViewColumnsAddedToModule: View Columns Added to Module is called when a column is added or removed
         /// </summary>
         /// <param name="moduleEntity">Module Entity that contains the added or removed column</param>
         /// <returns></returns>
@@ -100,16 +127,17 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// Accelerator Method <c>am_BeforeAddJoinColumnToModule</c>: This method is called before the join column is added to the module.
+        /// am_BeforeAddJoinColumnToModule: This method is called before the join column is added to the module.
         /// </summary>
         /// <param name="moduleEntity">The module entity.</param>
         /// <param name="joinField">The join field.</param>
         public virtual void am_BeforeAddJoinColumnToModule(AB_GenerationModuleEntity moduleEntity, AB_GenerationViewColumnEntity joinField)
         {
+
         }
 
         /// <summary>
-        /// Accelerator Method <c>am_AllModulesCompletedLoading</c>: This method is called after all modules completed being added to the module manager
+        /// am_AllModulesCompletedLoading: This method is called after all modules completed being added to the module manager
         /// </summary>
         /// <param name="generationModuleCollection">The generation module collection.</param>
         public virtual void am_AllModulesCompletedLoading(ObservableCollection<AB_GenerationModuleEntity> generationModuleCollection)
@@ -117,6 +145,10 @@ namespace GenerationWizardPlugin
 
         }
 
+        #endregion Generic Code
+
+        // Most custom development will be done in the Rules region.
+        // You can insert custom logic before the column rules, for the column rules, and after the column rules.
         #region Rules
 
         /// <summary>
@@ -127,6 +159,15 @@ namespace GenerationWizardPlugin
             switch (mode)
             {
                 case Mode.InitialSetup:
+                    // Set Module Name.  This will also set the image name
+                    moduleEntity.ModuleName = FormatModuleName(moduleEntity.ModuleName).Replace("File", "").Replace("Table", "").Replace("Master", "").Trim();
+
+                    // Set the Module Description to Module Name
+                    moduleEntity.ModuleDescription = moduleEntity.ModuleName;
+
+                    // Module has Auto Generated Keys
+                    moduleEntity.FileHasAutoGeneratedKey = false;
+
                     break;
 
                 case Mode.ColumnsChanged:
@@ -142,6 +183,59 @@ namespace GenerationWizardPlugin
             switch (mode)
             {
                 case Mode.InitialSetup:
+
+                    // Set Column Description to have Title Case
+                    viewColumnEntity.ColumnDescription = ToTitleCase(viewColumnEntity.ColumnDescription);
+
+                    // Property Name is Uppercase - Convert to titlecase
+                    viewColumnEntity.EntityPropertyName = AB_GenerationWizardShared.am_RemoveIllegalCharacters(viewColumnEntity.ColumnDescription);
+
+                    #region Example Code
+
+                    //// Set Numeric(8) date fields as Property Type of DateTime and Field Visualization of Date
+                    //if (viewColumnEntity.ColumnDescription.EndsWith("Date") && viewColumnEntity.Type == "NUMERIC(8)")
+                    //{
+                    //    viewColumnEntity.PropertyType = AB_PropertyTypes.DateTime;
+                    //    viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_DatePicker;
+                    //    viewColumnEntity.AdditionalDataMapParameters = "databaseFieldType: AB_EntityFieldType.Decimal";
+                    //}
+
+                    //// Apply Currency Format String to Decimals
+                    //if (viewColumnEntity.PropertyType == AB_PropertyTypes.Decimal && viewColumnEntity.FieldDecimals != 0)
+                    //{
+                    //    viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Currency;
+                    //    viewColumnEntity.StringFormat = "c";
+                    //}
+
+                    //// Apply Phone Format String
+                    //if (viewColumnEntity.ColumnDescription.Contains("Phone"))
+                    //{
+                    //    viewColumnEntity.PropertyType = AB_PropertyTypes.Decimal;
+                    //    viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_PhoneNumber;
+                    //    viewColumnEntity.StringFormat = "(###) ###-####";
+                    //}
+
+                    //// Set Active Char(1) Property Type of Boolean and Field Visualization of CheckBox
+                    //if (viewColumnEntity.ColumnDescription.Contains("Active") && viewColumnEntity.Type == "CHAR(1)")
+                    //{
+                    //    viewColumnEntity.PropertyType = AB_PropertyTypes.Boolean;
+                    //    viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_CheckBoxWithLabel;
+                    //}
+
+                    //// Apply Email Field Visualization
+                    //if (viewColumnEntity.ColumnDescription.Contains("Email"))
+                    //{
+                    //    viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_EmailAddress;
+                    //}
+
+                    //if (viewColumnEntity.IsKey && moduleEntity.FileHasAutoGeneratedKey == true)
+                    //{
+                    //    viewColumnEntity.Visible = false;
+                    //}
+
+                    #endregion Example Code
+
+                    viewColumnEntity.IsTitleField = IsDetailTitleField(viewColumnEntity);
 
                     if (IsIdentityField(viewColumnEntity))
                     {
@@ -175,18 +269,18 @@ namespace GenerationWizardPlugin
                     if (IsExtendedContentWindowField(viewColumnEntity))
                     {
                         viewColumnEntity.IsContentWindowField = true;
-                        viewColumnEntity.ShowInExtendedView = true;
                     }
-                    else
-                    {
-                        viewColumnEntity.ShowInExtendedView = false;
-                    }
+                    viewColumnEntity.ShowInExtendedView = false;
 
                     if (viewColumnEntity.IsKey)
                     {
-                        viewColumnEntity.IsContentWindowField = true;
-                        viewColumnEntity.ShowInExtendedView = false;
-                        viewColumnEntity.Visible = false;
+                        viewColumnEntity.IsRequiredField = true;
+                    }
+
+                    if (!viewColumnEntity.IsTitleField)
+                    {
+                        //If not a title field, then hide on small devices
+                        viewColumnEntity.WebMarkupTHDataAttributes = "data-hide=\"phone,tablet\"";
                     }
 
                     break;
@@ -195,8 +289,6 @@ namespace GenerationWizardPlugin
 
                     break;
             }
-
-            viewColumnEntity.IsTitleField = IsDetailTitleField(viewColumnEntity);
         }
 
         /// <summary>
@@ -207,19 +299,141 @@ namespace GenerationWizardPlugin
             switch (mode)
             {
                 case Mode.InitialSetup:
+
+                    SetViewDescriptionsToColumnNames(moduleEntity);
+
+                    #region Example Code
+
+                    //// Add View Standards
+                    //AddViewByViewFields(moduleEntity, moduleEntity.FileName + "AV1", new List<string> { "CFNAME", "CLNAME" });
+                    //AddViewByViewFields(moduleEntity, moduleEntity.FileName + "AV2", new List<string> { "CLNAME", "CFNAME" });
+
+                    //// Add Joins
+                    //if (_WizardShared.ap_Modules != null)
+                    //{
+                    //    foreach (var module in _WizardShared.ap_Modules)
+                    //    {
+                    //        if (module.AllColumns != null)
+                    //        {
+                    //            // Add Image Path join if CUSTNO and PRODNO Exist and are Keys
+                    //            if (module.AllColumns.Where(c => (c.Name == "CUSTNO" || c.Name == "PRODNO") && c.IsKey).Count() > 0)
+                    //            {
+                    //                var joinFields = new Dictionary<string, string>();
+                    //                joinFields.Add("PATH", "Image");
+                    //                AddJoinFields(module, "CSIMGP", joinFields);
+
+                    //                var joinField = module.AllColumns.Where(c => (c.Name == "CSIMGP.PATH")).FirstOrDefault();
+                    //                if (joinField != null)
+                    //                {
+                    //                    if (module.FileName == "CSCSTP")
+                    //                    {
+                    //                        joinField.WebMarkupTDInnerHTML = "'<img src= ' + data + ' height=\"85\" width=\"64\"/>'";
+                    //                    }
+                    //                    else
+                    //                    {
+                    //                        joinField.WebMarkupTDInnerHTML = "'<img src= ' + data + ' height=\"64\" width=\"64\"/>'";
+                    //                    }
+
+                    //                    joinField.FieldVisualization = AB_FieldVisualizations.AB_ImageUrl;
+                    //                    joinField.IsDetailField = true;
+
+                    //                    MoveFieldsInContentWindow(module);
+                    //                }
+
+                    //            }
+
+                    //            // Add First Name and Last Name joins if file contains CUSTNO and it is not the key
+                    //            if (module.AllColumns.Where(c => (c.Name == "CUSTNO" || c.Name == "CUST#") && !c.IsKey).Count() > 0)
+                    //            {
+                    //                var joinFields = new Dictionary<string, string>();
+                    //                joinFields.Add("CFNAME", "Customer First Name");
+                    //                joinFields.Add("CLNAME", "Customer Last Name");
+                    //                AddJoinFields(module, "CSCSTP", joinFields);
+
+                    //                var joinField = module.AllColumns.Where(c => (c.Name == "CSCSTP.CFNAME")).FirstOrDefault();
+                    //                if (joinField != null)
+                    //                {
+                    //                    joinField.IsExplorerBarField = true;
+                    //                }
+
+                    //                joinField = module.AllColumns.Where(c => (c.Name == "CSCSTP.CLNAME")).FirstOrDefault();
+                    //                if (joinField != null)
+                    //                {
+                    //                    joinField.IsExplorerBarField = true;
+                    //                }
+
+                    //            }
+
+                    //            // Add Product joins if file contains PRODNO and file has more than 1 key
+                    //            if (module.AllColumns.Where(c => (c.Name == "PRODNO") && c.IsKey).Count() > 0)
+                    //            {
+                    //                if (module.AllColumns.Where(c => c.IsKey).Count() > 1)
+                    //                {
+                    //                    var joinFields = new Dictionary<string, string>();
+                    //                    joinFields.Add("PRODTYPE", "Product Type");
+                    //                    joinFields.Add("DESCRP", "Product Description");
+                    //                    joinFields.Add("SELLPR", "Product Selling Price");
+                    //                    AddJoinFields(module, "CSINVP", joinFields);
+
+                    //                    var joinField = module.AllColumns.Where(c => (c.Name == "CSINVP.DESCRP")).FirstOrDefault();
+                    //                    if (joinField != null)
+                    //                    {
+                    //                        joinField.IsExplorerBarField = true;
+                    //                    }
+                    //                }
+                    //            }
+                    //        }
+                    //    }
+                    //}
+
+                    //// Add Full name Virtual
+                    //var firstName = moduleEntity.AllColumns.Where(c => c.EntityPropertyName == "FirstName" && !c.IsJoinedField).FirstOrDefault();
+                    //var lastName = moduleEntity.AllColumns.Where(c => c.EntityPropertyName == "LastName" && !c.IsJoinedField).FirstOrDefault();
+                    //if (firstName != null && lastName != null)
+                    //{
+                    //    var virtualField = AddConcatenationVirtualField(moduleEntity, "Full Name", new List<AB_GenerationViewColumnEntity> { lastName, firstName }, " ,");
+
+                    //    if (virtualField != null)
+                    //    {
+                    //        virtualField.IsDetailField = false;
+                    //    }
+                    //}
+
+                    //// Add Full Address Virtual
+                    //var streetAddress = moduleEntity.AllColumns.Where(c => c.EntityPropertyName == "StreetAddress").FirstOrDefault();
+                    //var city = moduleEntity.AllColumns.Where(c => c.EntityPropertyName == "City").FirstOrDefault();
+                    //var state = moduleEntity.AllColumns.Where(c => c.EntityPropertyName == "State").FirstOrDefault();
+                    //var zip4 = moduleEntity.AllColumns.Where(c => c.EntityPropertyName == "Zip4").FirstOrDefault();
+                    //if (streetAddress != null && city != null && state != null && zip4 != null)
+                    //{
+                    //    var virtualField = AddConcatenationVirtualField(moduleEntity, "Full Address", new List<AB_GenerationViewColumnEntity> { streetAddress, city, state, zip4 }, " ");
+
+                    //    if (virtualField != null)
+                    //    {
+                    //        virtualField.IsDetailField = false;
+                    //    }
+                    //}
+
+                    ////Remove all views that begin with "IX"
+                    //foreach (var view in moduleEntity.GenerationModuleExplorers[0].GenerationModuleExplorerViews.OrderBy(x => x.ViewName).Where(w => w.ViewName.StartsWith("IX")))
+                    //{
+                    //    _WizardShared.am_RemoveViewFromModule(view, moduleEntity);
+                    //}
+
+                    #endregion Example Code
+
                     break;
 
                 case Mode.ColumnsChanged:
+
                     break;
             }
-
-            MoveFieldsInContentWindow(moduleEntity);
-
         }
 
         #endregion Rules
 
         #region Default Standards
+
 
         #region Identity Fields
 
@@ -233,9 +447,8 @@ namespace GenerationWizardPlugin
         }
 
         private List<string> _identityField = new List<string>
-            {
-                "ID"
-            };
+        {
+        };
 
         /// <summary>
         /// Logic to determine if the field is an Identity Field
@@ -260,18 +473,10 @@ namespace GenerationWizardPlugin
         }
 
         private Dictionary<string, AB_AuditStampTypes> _auditStamps = new Dictionary<string, AB_AuditStampTypes>
-            {
-                {"CreateDate", AB_AuditStampTypes.CreateDate},
-                {"CreateTime", AB_AuditStampTypes.CreateTime},
-                {"CreateUser", AB_AuditStampTypes.CreateUser},
-                {"LastChangeDate", AB_AuditStampTypes.LastChangeDate},
-                {"LastChangeTime", AB_AuditStampTypes.LastChangeTime},
-                {"LastChangeUser", AB_AuditStampTypes.LastChangeUser},
-                {"rowguid", AB_AuditStampTypes.Undefined},
-                {"ModifiedDate", AB_AuditStampTypes.LastChangeDate},
-                // you can also use the undefined Audit Stamp
-                //{"AuditStampName", AB_AuditStampTypes.Undefined},
-            };
+        {
+            // you can also use the undefined Audit Stamp
+            //{"AuditStampName", AB_AuditStampTypes.Undefined},
+        };
 
         /// <summary>
         /// Logic to determine if the field should go on the Audit Stamp Tab
@@ -304,9 +509,8 @@ namespace GenerationWizardPlugin
         }
 
         private List<string> _extendedContentWindowField = new List<string>
-            {
-                "ID"
-            };
+        {
+        };
 
         /// <summary>
         /// Logic to determine if the field is an Extended Content Window Field
@@ -357,9 +561,9 @@ namespace GenerationWizardPlugin
         }
 
         private List<string> _detailTitleField = new List<string>
-            {
-                "Name",
-            };
+        {
+             "ID",
+        };
 
         /// <summary>
         /// Logic to determine if the field is a Title Field
@@ -383,9 +587,9 @@ namespace GenerationWizardPlugin
         }
 
         private List<string> _deleteFlagField = new List<string>
-            {
-                "IsDeleted"
-            };
+        {
+            // "IsDeleted"
+        };
 
         /// <summary>
         /// Logic to determine if the field is a Delete Flag Field
@@ -399,12 +603,41 @@ namespace GenerationWizardPlugin
 
         #endregion Default Standards
 
+        // Here you can relationships if they are not already being added via database constraints
+        #region Relationships
+
+        private void _AddDatabaseRelationships(ObservableCollection<AB_SchemaRelationshipEntity> relationships)
+        {
+            if (relationships == null)
+            {
+                relationships = new ObservableCollection<AB_SchemaRelationshipEntity>();
+            }
+
+            // Example
+            //relationships.Add(_AddRelationship("CSCSTP", "CUSTNO", "CSORDP", "CUST#", SchemaRelationshipType.OneToMany));
+        }
+
+        private AB_SchemaRelationshipEntity _AddRelationship(string primaryTable, string primaryKeyColumn, string foreignTable, string foreignKeyColumn, SchemaRelationshipType relationshipType)
+        {
+            return new AB_SchemaRelationshipEntity()
+            {
+                PrimaryTable = primaryTable,
+                PrimaryKeyColumn = primaryKeyColumn,
+                ForeignTable = foreignTable,
+                ForeignKeyColumn = foreignKeyColumn,
+                RelationshipType = relationshipType,
+            };
+        }
+
+        #endregion Relationships
+
+        // In additon to the below helper methods, you can also use the methods defined in _WizardShared to further manipulate the generation
         #region Helper Methods
 
         /// <summary>
         /// Format Module Name
         /// </summary>
-        /// <param name="s">Name to be formateed</param>
+        /// <param name="s">Name to be formated</param>
         /// <returns></returns>
         internal static string FormatModuleName(string s)
         {
@@ -435,7 +668,7 @@ namespace GenerationWizardPlugin
         /// <summary>
         /// Title Case
         /// </summary>
-        /// <param name="s">Name to be formateed</param>
+        /// <param name="s">Name to be formated</param>
         /// <returns></returns>
 
         internal static string ToTitleCase(string s)
@@ -445,40 +678,79 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// Add a View by Name if a column exists that contains Name and set the View as the Default
+        /// Adds the view by view fields.
         /// </summary>
-        /// <param name="moduleEntity">Module Entity</param>
-        /// <returns></returns>
-        internal void AddViewByViewField(AB_GenerationModuleEntity moduleEntity, string viewField)
+        /// <param name="moduleEntity">The module entity.</param>
+        /// <param name="viewName">Name of the view.</param>
+        /// <param name="viewFields">The view fields.</param>
+        /// <returns>AB_GenerationModuleExplorerViewEntity.</returns>
+        internal AB_GenerationModuleExplorerViewEntity AddViewByViewFields(AB_GenerationModuleEntity moduleEntity, string viewName, List<string> viewFields, bool defaultView = false)
         {
-            if (moduleEntity.AllColumns.Any(x => x.ViewField.ToUpper().Equals(viewField.ToUpper())))
+            var viewColumns = new ObservableCollection<AB_GenerationViewColumnEntity>();
+
+            foreach (var viewField in viewFields)
             {
-                var viewColumns = new ObservableCollection<AB_GenerationViewColumnEntity>();
-                var nameColumn = moduleEntity.AllColumns.FirstOrDefault(x => x.ViewField.ToUpper().Equals(viewField.ToUpper()));
-                if (nameColumn != null)
+                if (moduleEntity.AllColumns.Any(x => x.ViewField.ToUpper().Equals(viewField.ToUpper())))
                 {
-                    viewColumns.Add(nameColumn);
+                    var nameColumn = moduleEntity.AllColumns.FirstOrDefault(x => x.ViewField.ToUpper().Equals(viewField.ToUpper()));
+                    if (nameColumn != null)
+                    {
+                        viewColumns.Add(nameColumn);
+                    }
                 }
+            }
+
+            if (viewColumns.Count() > 0)
+            {
+                var viewDescription = "";
+                foreach (var gvc in viewColumns)
+                {
+                    viewDescription = viewDescription == ""
+                        ? gvc.ColumnDescription
+                        : viewDescription + ", " + gvc.ColumnDescription;
+                }
+
                 var keyColumns = moduleEntity.AllColumns.Where(x => x.IsKey);
                 foreach (var vc in keyColumns.Where(vc => !viewColumns.Contains(vc)))
                 {
                     viewColumns.Add(vc);
                 }
 
-                var viewToAdd = WizardShared.am_CreateDefaultView(viewField, viewField, viewColumns);
+                var viewToAdd = _WizardShared.am_CreateDefaultView(viewName, viewDescription, viewColumns);
                 if (viewToAdd == null)
                 {
-                    MessageBox.Show("Error adding View: By " + viewField + " to module: " + moduleEntity.ModuleName);
-                    return;
+                    MessageBox.Show("Error adding View: " + viewName + " to module: " + moduleEntity.ModuleName);
+                    return null;
                 }
-                WizardShared.am_AddViewToModule(viewToAdd, moduleEntity);
+                _WizardShared.am_AddViewToModule(viewToAdd, moduleEntity);
 
-                WizardShared.am_SetDefaultView(viewToAdd, moduleEntity);
+                if (defaultView)
+                {
+                    _WizardShared.am_SetDefaultView(viewToAdd, moduleEntity);
 
-                WizardShared.am_SetFirstViewColumnAsFirstContentWindowColumn(moduleEntity);
+                    _WizardShared.am_SetFirstViewColumnAsFirstContentWindowColumn(moduleEntity);
+                }
+
+                return viewToAdd;
             }
+
+            return null;
         }
 
+        internal void SetViewDescriptionsToColumnNames(AB_GenerationModuleEntity moduleEntity)
+        {
+            foreach (var mev in moduleEntity.GenerationModuleExplorers.SelectMany(me => me.GenerationModuleExplorerViews))
+            {
+                mev.ViewDescription = "";
+                foreach (var gvc in mev.GenerationViewColumns)
+                {
+                    gvc.ColumnDescription = ToTitleCase(gvc.ColumnDescription);
+                    mev.ViewDescription = mev.ViewDescription == ""
+                        ? gvc.ColumnDescription
+                        : mev.ViewDescription + ", " + gvc.ColumnDescription;
+                }
+            }
+        }
 
         /// <summary>
         /// Move fields around in Content Window.
@@ -490,32 +762,33 @@ namespace GenerationWizardPlugin
             var contentWindowItems =
                 new ObservableCollection<AB_GenerationViewColumnEntity>(
                     moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDiplaySequence).ToList());
-            var itemsToMoveBottom = new ObservableCollection<AB_GenerationViewColumnEntity>();
-            var itemsToMoveTop = new ObservableCollection<AB_GenerationViewColumnEntity>();
+            var itemsToMove = new ObservableCollection<AB_GenerationViewColumnEntity>();
 
             foreach (var vce in contentWindowItems)
             {
-                // Move Extended View Items to Bottom
-                if (vce.ShowInExtendedView == true)
-                {
-                    itemsToMoveBottom.Add(vce);
-                }
                 // Move Join Fields To Top
-                else if (vce.IsJoinedField)
+                if (vce.IsJoinedField)
                 {
-                    itemsToMoveTop.Add(vce);
+                    itemsToMove.Add(vce);
                 }
             }
 
-            CollectionHelperMethods.MoveItemsTop(itemsToMoveTop, contentWindowItems);
-            CollectionHelperMethods.MoveItemsBottom(itemsToMoveBottom, contentWindowItems);
-
-            // Resequence by 5
-            int contentWindowDispSeq = 5;
-            foreach (AB_GenerationViewColumnEntity vce in contentWindowItems)
+            if (itemsToMove.Count > 0)
             {
-                vce.ContentWindowDiplaySequence = contentWindowDispSeq;
-                contentWindowDispSeq += 5;
+                CollectionHelperMethods.MoveItemsTop(itemsToMove, contentWindowItems);
+
+                for (int i = 0; i < moduleEntity.AllColumns.Where(k => k.IsKey).Count(); i++)
+                {
+                    CollectionHelperMethods.MoveItemsDown(itemsToMove, contentWindowItems);
+                }
+
+                // Resequence by 5
+                int contentWindowDispSeq = 5;
+                foreach (AB_GenerationViewColumnEntity vce in contentWindowItems)
+                {
+                    vce.ContentWindowDiplaySequence = contentWindowDispSeq;
+                    contentWindowDispSeq += 5;
+                }
             }
         }
 
@@ -539,6 +812,90 @@ namespace GenerationWizardPlugin
             }
 
             return data.ToString();
+        }
+
+        internal void AddJoinFields(AB_GenerationModuleEntity moduleEntity, string joinedFileName, Dictionary<string, string> joinFields)
+        {
+            foreach (var genRel in moduleEntity.GenerationRelationships)
+            {
+                if (moduleEntity == genRel.ParentModule && genRel.ChildTableName == joinedFileName)
+                {
+                    var joinFieldsList = new List<AB_GenerationViewColumnEntity>();
+                    foreach (var field in joinFields)
+                    {
+                        if (moduleEntity.AllColumns.Where(x => x.IsJoinedField && x.JoinedFileName == joinedFileName && x.Name == field.Key).Count() == 0)
+                        {
+                            var joinField = genRel.EligibleChildFields.Where(x => x.Name == field.Key).FirstOrDefault();
+                            if (joinField != null)
+                            {
+                                var joinFieldCopy = joinField.am_CreateDeepCopy<AB_GenerationViewColumnEntity>();
+                                joinFieldCopy.JoinEntityPropertyName = AB_GenerationWizardShared.am_RemoveIllegalCharacters(field.Value);
+                                joinFieldCopy.JoinFieldDescription = field.Value;
+
+                                joinFieldsList.Add(joinFieldCopy);
+                            }
+                        }
+                    }
+
+                    if (joinFieldsList.Count() > 0)
+                    {
+                        _WizardShared.am_AddJoinedColumnsToModule(moduleEntity, joinedFileName, joinFieldsList, genRel);
+                    }
+                }
+
+                if (moduleEntity == genRel.ChildModule && genRel.ParentTableName == joinedFileName)
+                {
+                    var joinFieldsList = new List<AB_GenerationViewColumnEntity>();
+                    foreach (var field in joinFields)
+                    {
+                        if (moduleEntity.AllColumns.Where(x => x.IsJoinedField && x.JoinedFileName == joinedFileName && x.Name == field.Key).Count() == 0)
+                        {
+                            var joinField = genRel.EligibleParentFields.Where(x => x.Name == field.Key).FirstOrDefault();
+
+                            if (joinField != null)
+                            {
+                                var joinFieldCopy = joinField.am_CreateDeepCopy<AB_GenerationViewColumnEntity>();
+                                joinFieldCopy.JoinEntityPropertyName = AB_GenerationWizardShared.am_RemoveIllegalCharacters(field.Value);
+                                joinFieldCopy.JoinFieldDescription = field.Value;
+
+                                joinFieldsList.Add(joinFieldCopy);
+                            }
+                        }
+                    }
+
+                    if (joinFieldsList.Count() > 0)
+                    {
+                        _WizardShared.am_AddJoinedColumnsToModule(moduleEntity, joinedFileName, joinFieldsList, genRel);
+                    }
+                }
+            }
+        }
+
+        internal AB_GenerationViewColumnEntity AddConcatenationVirtualField(AB_GenerationModuleEntity moduleEntity, string columnDescription, List<AB_GenerationViewColumnEntity> fields, string virtualConcatenationSeperator)
+        {
+            var virtualField = new AB_GenerationViewColumnEntity()
+            {
+                EntityPropertyName = AB_GenerationWizardShared.am_RemoveIllegalCharacters(columnDescription),
+                ColumnDescription = columnDescription,
+                IsVirtual = true,
+                VirtualFieldType = AB_VirtualFieldTypes.Concatenation,
+                PropertyType = AB_PropertyTypes.String,
+                FieldVisualization = AB_FieldVisualizations.AB_FieldWithLabel,
+                DatabasePropertyType = AB_PropertyTypes.String,
+                Type = AB_PropertyTypes.String.ToString().ToUpper(),
+                ViewField = AB_GenerationWizardShared.am_RemoveIllegalCharacters(columnDescription).ToUpper(),
+                VirtualCalculationFields = new ObservableCollection<AB_CalculationVirtualEntity>(),
+                VirtualConcatenationSeperator = virtualConcatenationSeperator,
+            };
+
+            foreach (var field in fields)
+            {
+                virtualField.VirtualCalculationFields.Add(new AB_CalculationVirtualEntity() { VirtualProperty = field, VirtualPropertyType = AB_VirtualPropertyType.Field });
+            }
+
+            _WizardShared.am_AddVirtualColumnToModule(moduleEntity, virtualField);
+
+            return moduleEntity.AllColumns.Where(c => (c.EntityPropertyName == virtualField.EntityPropertyName)).FirstOrDefault();
         }
 
         #endregion Helper Methods
