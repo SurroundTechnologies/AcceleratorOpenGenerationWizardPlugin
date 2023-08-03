@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="AdventureWorksWizardDefaults.cs" />
     <Compile Include="CloudServices24x7WizardDefaults.cs" />
+    <Compile Include="EasyBuyWizardDefaults_DB2LegacyOLD.cs" />
     <Compile Include="WizardDefaultsTemplate.cs" />
     <Compile Include="EasyBuyWizardDefaults_DB2Legacy.cs" />
     <Compile Include="EasyBuyWizardDefaults_DB2Modern.cs" />
