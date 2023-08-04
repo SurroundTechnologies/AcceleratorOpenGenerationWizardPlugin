@@ -175,7 +175,7 @@ namespace GenerationWizardPlugin
                     {
                         viewColumnEntity.IsIdentity = false;
                         viewColumnEntity.IsRequiredField = false;
-                        if (viewColumnEntity.Type == "NUMERIC(8)")
+                        if (viewColumnEntity.Type == "NUMERIC(8.0)")
                         {
                             viewColumnEntity.IsAutoIncrementedInCode = true;
                         }
@@ -229,19 +229,19 @@ namespace GenerationWizardPlugin
                     }
 
                     // Set Numeric(8) date fields as Property Type of DateTime and Field Visualization of Date
-                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "DT") && ((viewColumnEntity.Type == "NUMERIC(8)") || viewColumnEntity.Type == "DATE(4)"))
+                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "DT") && ((viewColumnEntity.Type == "NUMERIC(8.0)") || viewColumnEntity.Type == "DATE(4)"))
                     {
                         viewColumnEntity.PropertyType = AB_PropertyTypes.DateTime;
                         viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_DatePicker;
 
-                        if ((viewColumnEntity.Type == "NUMERIC(8)"))
+                        if ((viewColumnEntity.Type == "NUMERIC(8.0)"))
                         {
                             viewColumnEntity.AdditionalDataMapParameters = "databaseFieldType: AB_EntityFieldType.Decimal";
                         }
                     }
 
                     // Set Numeric(6) Time fields as Property Type of TimeSpan and Field Visualization of Time
-                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "TM") && (viewColumnEntity.Type == "NUMERIC(6)"))
+                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "TM") && (viewColumnEntity.Type == "NUMERIC(6.0)"))
                     {
                         viewColumnEntity.PropertyType = AB_PropertyTypes.TimeSpan;
                         viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_TimePicker;
@@ -323,7 +323,7 @@ namespace GenerationWizardPlugin
                             foreach (var vce in from vcf in viewColumnEntity.VirtualCalculationFields where vcf.VirtualPropertyType == AB_VirtualPropertyType.Field from vce in moduleEntity.AllColumns where vce.EntityPropertyName == vcf.VirtualPropertyName select vce)
                             {
                                 vce.Visible = false;
-                                viewColumnEntity.ContentWindowDiplaySequence = vce.ContentWindowDiplaySequence += 1;
+                                viewColumnEntity.ContentWindowDisplaySequence = vce.ContentWindowDisplaySequence += 1;
                             }
                         }
                     }
@@ -733,7 +733,7 @@ namespace GenerationWizardPlugin
         {
             var contentWindowItems =
                 new ObservableCollection<AB_GenerationViewColumnEntity>(
-                    moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDiplaySequence).ToList());
+                    moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDisplaySequence).ToList());
             var itemsToMoveBottom = new ObservableCollection<AB_GenerationViewColumnEntity>();
             var itemsToMoveTop = new ObservableCollection<AB_GenerationViewColumnEntity>();
 
@@ -758,7 +758,7 @@ namespace GenerationWizardPlugin
             int contentWindowDispSeq = 5;
             foreach (AB_GenerationViewColumnEntity vce in contentWindowItems)
             {
-                vce.ContentWindowDiplaySequence = contentWindowDispSeq;
+                vce.ContentWindowDisplaySequence = contentWindowDispSeq;
                 contentWindowDispSeq += 5;
             }
         }

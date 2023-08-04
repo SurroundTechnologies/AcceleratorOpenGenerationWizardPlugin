@@ -246,8 +246,8 @@ namespace GenerationWizardPlugin
                             foreach (var vce in from vcf in viewColumnEntity.VirtualCalculationFields where vcf.VirtualPropertyType == AB_VirtualPropertyType.Field from vce in moduleEntity.AllColumns where vce.EntityPropertyName == vcf.VirtualPropertyName select vce)
                             {
                                 vce.Visible = false;
-                                viewColumnEntity.ContentWindowDiplaySequence =
-                                    vce.ContentWindowDiplaySequence += 1;
+                                viewColumnEntity.ContentWindowDisplaySequence =
+                                    vce.ContentWindowDisplaySequence += 1;
                             }
 
                         }
@@ -639,7 +639,7 @@ namespace GenerationWizardPlugin
         {
             var contentWindowItems =
                 new ObservableCollection<AB_GenerationViewColumnEntity>(
-                    moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDiplaySequence).ToList());
+                    moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDisplaySequence).ToList());
             var itemsToMoveBottom = new ObservableCollection<AB_GenerationViewColumnEntity>();
             var itemsToMoveTop = new ObservableCollection<AB_GenerationViewColumnEntity>();
 
@@ -664,7 +664,7 @@ namespace GenerationWizardPlugin
             int contentWindowDispSeq = 5;
             foreach (AB_GenerationViewColumnEntity vce in contentWindowItems)
             {
-                vce.ContentWindowDiplaySequence = contentWindowDispSeq;
+                vce.ContentWindowDisplaySequence = contentWindowDispSeq;
                 contentWindowDispSeq += 5;
             }
 

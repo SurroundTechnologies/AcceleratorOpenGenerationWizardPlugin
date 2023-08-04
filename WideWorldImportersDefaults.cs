@@ -324,7 +324,7 @@ namespace GenerationWizardPlugin
                     #region Example Code
 
                     //// Set Numeric(8) date fields as Property Type of DateTime and Field Visualization of Date
-                    //if (viewColumnEntity.ColumnDescription.EndsWith("Date") && viewColumnEntity.Type == "NUMERIC(8)")
+                    //if (viewColumnEntity.ColumnDescription.EndsWith("Date") && viewColumnEntity.Type == "NUMERIC(8.0)")
                     //{
                     //    viewColumnEntity.PropertyType = AB_PropertyTypes.DateTime;
                     //    viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_DatePicker;
@@ -969,7 +969,7 @@ namespace GenerationWizardPlugin
         {
             var contentWindowItems =
                 new ObservableCollection<AB_GenerationViewColumnEntity>(
-                    moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDiplaySequence).ToList());
+                    moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDisplaySequence).ToList());
             var itemsToMove = new ObservableCollection<AB_GenerationViewColumnEntity>();
 
             foreach (var vce in contentWindowItems)
@@ -994,7 +994,7 @@ namespace GenerationWizardPlugin
                 int contentWindowDispSeq = 5;
                 foreach (AB_GenerationViewColumnEntity vce in contentWindowItems)
                 {
-                    vce.ContentWindowDiplaySequence = contentWindowDispSeq;
+                    vce.ContentWindowDisplaySequence = contentWindowDispSeq;
                     contentWindowDispSeq += 5;
                 }
             }

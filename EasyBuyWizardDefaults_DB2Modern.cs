@@ -68,7 +68,7 @@ namespace GenerationWizardPlugin
                     if (IsIdentityField(viewColumnEntity))
                     {
                         viewColumnEntity.IsIdentity = false;
-                        if (viewColumnEntity.Type == "NUMERIC(8)")
+                        if (viewColumnEntity.Type == "NUMERIC(8.0)")
                         {
                             viewColumnEntity.IsAutoIncrementedInCode = true;
                         }

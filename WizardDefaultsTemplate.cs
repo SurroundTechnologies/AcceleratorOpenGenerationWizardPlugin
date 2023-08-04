@@ -19,6 +19,10 @@ namespace GenerationWizardPlugin
 
         #region Generic Code
 
+        /// <summary>
+        /// Accelerator Method <c>am_Initialize</c>: initialize.
+        /// </summary>
+        /// <param name="generationWizardShared">The generation wizard shared.</param>
         public virtual void am_Initialize(AB_GenerationWizardShared generationWizardShared)
         {
             // Relationships are pulled from the database access routes. If no relationships are defined on the database, you can define the relationships in the _AddDatabaseRelationships method.
@@ -28,11 +32,11 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// Prompts for keys if none specified.
+        /// Accelerator Method <c>am_PromptForKeysIfNoneSpecified</c>: Prompts for keys if none specified on the File/Table.
         /// </summary>
-        /// <remarks>This method is called when no keys are found on the physical file. Returning True will prompt the user to select the keys. You can set the keys in this method and then return false to not show the prompt</remarks>
+        /// <remarks>This method is called when no keys are found on the table or physical file. Returning True will prompt the user to select the keys. You can set the keys in this method and then return false to not show the prompt</remarks>
         /// <param name="moduleEntity">The module entity.</param>
-        /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+        /// <returns><c>true</c> if you want to prompt the user to specify the keys, <c>false</c> if you can specify the keys in this method.</returns>
         public virtual bool am_PromptForKeysIfNoneSpecified(AB_GenerationModuleEntity moduleEntity)
         {
             #region Example Code
@@ -64,8 +68,9 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// The method is called Before the module is added to the module manager. You can return false if you don't want the module to be added.
+        /// Accelerator Method <c>am_AllowAddModule</c>: intervene with allowing a particular module to be added
         /// </summary>
+        /// <remarks>This method is called Before the module is added to the module manager. You can return false if you don't want the module to be added.</remarks>
         /// <param name="moduleEntity">The module entity.</param>
         /// <returns><c>true</c> if you want to add the module to the module manager, <c>false</c> otherwise.</returns>
         public virtual bool am_AllowAddModule(AB_GenerationModuleEntity moduleEntity)
@@ -79,7 +84,7 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// am_SetDefaultForModule: Set Default for Module is called when a file is added to the Module Manager.
+        /// Accelerator Method <c>am_SetDefaultForModule</c>: Set Default for Module is called when a file is added to the Module Manager.
         /// </summary>
         /// <param name="moduleEntity">Module Entity that is being added to the Module Manager</param>
         /// <returns></returns>
@@ -103,7 +108,7 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// am_ViewColumnsAddedToModule: View Columns Added to Module is called when a column is added or removed
+        /// Accelerator Method <c>am_ViewColumnsAddedToModule</c>: View Columns Added to Module is called when a column is added or removed
         /// </summary>
         /// <param name="moduleEntity">Module Entity that contains the added or removed column</param>
         /// <returns></returns>
@@ -127,7 +132,7 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// am_BeforeAddJoinColumnToModule: This method is called before the join column is added to the module.
+        /// Accelerator Method <c>am_BeforeAddJoinColumnToModule</c>: This method is called before the join column is added to the module.
         /// </summary>
         /// <param name="moduleEntity">The module entity.</param>
         /// <param name="joinField">The join field.</param>
@@ -137,7 +142,7 @@ namespace GenerationWizardPlugin
         }
 
         /// <summary>
-        /// am_AllModulesCompletedLoading: This method is called after all modules completed being added to the module manager
+        /// Accelerator Method <c>am_AllModulesCompletedLoading</c>: This method is called after all modules completed being added to the module manager
         /// </summary>
         /// <param name="generationModuleCollection">The generation module collection.</param>
         public virtual void am_AllModulesCompletedLoading(ObservableCollection<AB_GenerationModuleEntity> generationModuleCollection)
@@ -193,7 +198,7 @@ namespace GenerationWizardPlugin
                     #region Example Code
 
                     //// Set Numeric(8) date fields as Property Type of DateTime and Field Visualization of Date
-                    //if (viewColumnEntity.ColumnDescription.EndsWith("Date") && viewColumnEntity.Type == "NUMERIC(8)")
+                    //if (viewColumnEntity.ColumnDescription.EndsWith("Date") && viewColumnEntity.Type == "NUMERIC(8.0)")
                     //{
                     //    viewColumnEntity.PropertyType = AB_PropertyTypes.DateTime;
                     //    viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_DatePicker;
@@ -761,7 +766,7 @@ namespace GenerationWizardPlugin
         {
             var contentWindowItems =
                 new ObservableCollection<AB_GenerationViewColumnEntity>(
-                    moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDiplaySequence).ToList());
+                    moduleEntity.AllColumns.OrderBy(x => x.ContentWindowDisplaySequence).ToList());
             var itemsToMove = new ObservableCollection<AB_GenerationViewColumnEntity>();
 
             foreach (var vce in contentWindowItems)
@@ -786,7 +791,7 @@ namespace GenerationWizardPlugin
                 int contentWindowDispSeq = 5;
                 foreach (AB_GenerationViewColumnEntity vce in contentWindowItems)
                 {
-                    vce.ContentWindowDiplaySequence = contentWindowDispSeq;
+                    vce.ContentWindowDisplaySequence = contentWindowDispSeq;
                     contentWindowDispSeq += 5;
                 }
             }

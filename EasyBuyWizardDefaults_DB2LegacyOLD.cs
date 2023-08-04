@@ -83,19 +83,19 @@ namespace GenerationWizardPlugin
                     }
 
                     // Set Numeric(8) date fields as Property Type of DateTime and Field Visualization of Date
-                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "DT") && ((viewColumnEntity.Type == "NUMERIC(8)") || viewColumnEntity.Type == "DATE(4)"))
+                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "DT") && ((viewColumnEntity.Type == "NUMERIC(8.0)") || viewColumnEntity.Type == "DATE(4)"))
                     {
                         viewColumnEntity.PropertyType = AB_PropertyTypes.DateTime;
                         viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_DatePicker;
 
-                        if ((viewColumnEntity.Type == "NUMERIC(8)"))
+                        if ((viewColumnEntity.Type == "NUMERIC(8.0)"))
                         {
                             viewColumnEntity.AdditionalDataMapParameters = "databaseFieldType: AB_EntityFieldType.Decimal";
                         }
                     }
 
                     // Set Numeric(6) Time fields as Property Type of TimeSpan and Field Visualization of Time
-                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "TM") && (viewColumnEntity.Type == "NUMERIC(6)"))
+                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "TM") && (viewColumnEntity.Type == "NUMERIC(6.0)"))
                     {
                         viewColumnEntity.PropertyType = AB_PropertyTypes.TimeSpan;
                         viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_TimePicker;
@@ -106,7 +106,7 @@ namespace GenerationWizardPlugin
                     if (IsIdentityField(viewColumnEntity))
                     {
                         viewColumnEntity.IsIdentity = false;
-                        if (viewColumnEntity.Type == "NUMERIC(8)")
+                        if (viewColumnEntity.Type == "NUMERIC(8.0)")
                         {
                             viewColumnEntity.IsAutoIncrementedInCode = true;
                         }
