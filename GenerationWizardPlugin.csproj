@@ -84,10 +84,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EasyBuyWizardDefaults_DB2Modern.cs" />
     <Compile Include="WizardDefaultsTemplate.cs" />
     <Compile Include="EasyBuyWizardDefaults_DB2LegacyOLD.cs" />
     <Compile Include="EasyBuyWizardDefaults_DB2Legacy.cs" />
-    <Compile Include="EasyBuyWizardDefaults_DB2Modern.cs" />
+    <Compile Include="EasyBuyWizardDefaults_DB2ModernOLD.cs" />
     <Compile Include="EasyBuyWizardDefaults_MSSQLLegacy.cs" />
     <Compile Include="EasyBuyWizardDefaults_MSSQLLModern.cs" />
     <Compile Include="AdventureWorksWizardDefaults.cs" />
