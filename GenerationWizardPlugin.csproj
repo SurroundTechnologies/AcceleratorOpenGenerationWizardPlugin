@@ -84,6 +84,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GoldCrossWizardDefaults.cs" />
     <Compile Include="EasyBuyWizardDefaults_DB2Modern.cs" />
     <Compile Include="WizardDefaultsTemplate.cs" />
     <Compile Include="EasyBuyWizardDefaults_DB2LegacyOLD.cs" />
