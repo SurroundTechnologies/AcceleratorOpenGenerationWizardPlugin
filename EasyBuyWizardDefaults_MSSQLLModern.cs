@@ -158,9 +158,14 @@ namespace GenerationWizardPlugin
                     if (requiredField.Any(x => viewColumnEntity.ViewField.ToUpper().EndsWith(x.ToUpper())))
                     {
                         viewColumnEntity.IsRequiredField = true;
-                    }
+					}
 
-                    break;
+					if (IsCurrencyField(viewColumnEntity))
+					{
+						viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Currency;
+					}
+
+					break;
 
                 case Mode.ColumnsChanged:
 
@@ -224,5 +229,17 @@ namespace GenerationWizardPlugin
                 }
             }
         }
-    }
+
+		#region Other
+
+		private bool IsCurrencyField(AB_GenerationViewColumnEntity column)
+		{
+			List<string> keywords = new List<string>() { "cost", "price" };
+
+			return column.PropertyType == AB_PropertyTypes.Decimal &&
+				   keywords.Any(x => column.NewEntityPropertyName.ToLower().Contains(x.ToLower()));
+		}
+
+		#endregion
+	}
 }

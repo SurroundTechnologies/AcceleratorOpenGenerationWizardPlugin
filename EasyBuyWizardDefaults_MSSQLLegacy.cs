@@ -162,16 +162,22 @@ namespace GenerationWizardPlugin
                     }
 
                     var requiredField = new List<string>
-                {
-                    "NM","CNLN","CNFN","A1","A2","A3","HPC","LPC","HCY","LCY","TL","EM","OID","PID","IQT","IID","CID","ODT","SID","ST","PONO","CD","LSPR"
-                };
+                    {
+                        "NM","CNLN","CNFN","A1","A2","A3","HPC","LPC","HCY","LCY","TL","EM","OID","PID","IQT","IID","CID","ODT","SID","ST","PONO","CD","LSPR"
+                    };
                     // Set Required Fields
                     if (requiredField.Any(x => viewColumnEntity.ViewField.ToUpper().EndsWith(x.ToUpper())))
                     {
                         viewColumnEntity.IsRequiredField = true;
                     }
 
-                    break;
+
+					if (IsCurrencyField(viewColumnEntity))
+					{
+						viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Currency;
+					}
+
+					break;
 
                 case Mode.ColumnsChanged:
 
@@ -283,6 +289,18 @@ namespace GenerationWizardPlugin
             };
         }
 
-        #endregion Relationships
-    }
+		#endregion Relationships
+
+		#region Other
+
+		private bool IsCurrencyField(AB_GenerationViewColumnEntity column)
+		{
+			List<string> keywords = new List<string>() { "cost", "price" };
+
+			return column.PropertyType == AB_PropertyTypes.Decimal &&
+				   keywords.Any(x => column.NewEntityPropertyName.ToLower().Contains(x.ToLower()));
+		}
+
+		#endregion
+	}
 }

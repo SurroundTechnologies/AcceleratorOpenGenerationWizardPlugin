@@ -242,7 +242,12 @@ namespace GenerationWizardPlugin
                         viewColumnEntity.IsTitleField = true;
                     }
 
-                    break;
+					if (IsCurrencyField(viewColumnEntity))
+					{
+						viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Currency;
+					}
+
+					break;
 
                 case Mode.ColumnsChanged:
 
@@ -509,18 +514,30 @@ namespace GenerationWizardPlugin
             return DeleteFlagField.Any(x => vce.ViewField.ToUpper().Contains(x.ToUpper()));
         }
 
-        #endregion Soft Delete Fields
+		#endregion Soft Delete Fields
 
-        #endregion Default Standards
+		#region Other
 
-        #region Helper Methods
+		private bool IsCurrencyField(AB_GenerationViewColumnEntity column)
+		{
+			List<string> keywords = new List<string>() { "cost", "price" };
 
-        /// <summary>
-        /// Format Module Name
-        /// </summary>
-        /// <param name="s">Name to be formateed</param>
-        /// <returns></returns>
-        internal static string FormatModuleName(string s)
+			return column.PropertyType == AB_PropertyTypes.Decimal &&
+				   keywords.Any(x => column.NewEntityPropertyName.ToLower().Contains(x.ToLower()));
+		}
+
+		#endregion
+
+		#endregion Default Standards
+
+		#region Helper Methods
+
+		/// <summary>
+		/// Format Module Name
+		/// </summary>
+		/// <param name="s">Name to be formateed</param>
+		/// <returns></returns>
+		internal static string FormatModuleName(string s)
         {
             // Replace any Keywords
             s = StringBuilderReplaceKeywords(new StringBuilder(s, s.Length * 2));
