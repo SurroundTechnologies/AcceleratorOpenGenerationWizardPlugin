@@ -165,6 +165,11 @@ namespace GenerationWizardPlugin
 						viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Currency;
 					}
 
+					if (moduleEntity.TableName == "YD1I" && viewColumnEntity.NewEntityPropertyName == "DiscountPercent")
+					{
+						viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Percent;
+					}
+
 					break;
 
                 case Mode.ColumnsChanged:
@@ -237,7 +242,7 @@ namespace GenerationWizardPlugin
 			List<string> keywords = new List<string>() { "cost", "price" };
 
 			return column.PropertyType == AB_PropertyTypes.Decimal &&
-				   keywords.Any(x => column.NewEntityPropertyName.ToLower().Contains(x.ToLower()));
+				   keywords.Any(x => column.EntityPropertyName.ToLower().Contains(x.ToLower()));
 		}
 
 		#endregion
