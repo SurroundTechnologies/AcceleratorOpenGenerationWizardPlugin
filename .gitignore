@@ -36,6 +36,9 @@ Ankh.NoLoad
 .vs
 .ruleset
 
+#NuGet
+packages/
+
 #Tooling
 _ReSharper*/
 *.resharper
