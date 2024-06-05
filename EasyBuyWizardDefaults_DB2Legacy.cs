@@ -175,10 +175,7 @@ namespace GenerationWizardPlugin
                     {
                         viewColumnEntity.IsIdentity = false;
                         viewColumnEntity.IsRequiredField = false;
-                        if (viewColumnEntity.Type == "NUMERIC(8.0)")
-                        {
-                            viewColumnEntity.IsAutoIncrementedInCode = true;
-                        }
+                        viewColumnEntity.IsAutoIncrementedInCode = true;
                     }
 
                     if (IsAuditTabField(viewColumnEntity))
