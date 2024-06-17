@@ -291,7 +291,7 @@ namespace GenerationWizardPlugin
 
                     var requiredField = new List<string>
                     {
-                        "NM","CNLN","CNFN","A1","A2","A3","HPC","LPC","HCY","LCY","TL","EM","OID","PID","IQT","IID","CID","ODT","SID","ST","PONO","CD","LSPR"
+                        "NM","NMLG","CNLN","CNFN","A1","A2","A3","HPC","LPC","HCY","LCY","TL","EM","OID","PID","IQT","IID","CID","ODT","SID","ST","PONO","CD","LSPR"
                     };
 
                     // Set Required Fields
@@ -400,7 +400,7 @@ namespace GenerationWizardPlugin
         /// <param name="moduleEntity">Module Entity</param>
         /// <returns></returns>
         private void _SetDefaultView(AB_GenerationModuleExplorerViewEntity viewEntity, AB_GenerationModuleEntity moduleEntity)
-        {
+		{
             const string defaultViewSuffix = "LF1";
 
             if (viewEntity.ViewName.ToUpper().EndsWith(defaultViewSuffix.ToUpper()) && viewEntity.Description.ToUpper().Contains("NAME"))
