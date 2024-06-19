@@ -1,27 +1,34 @@
-﻿using A4DN.CF.WizardShared;
+﻿using A4DN.CF.SchemaEntities;
 using A4DN.Core.BOS.Base;
 using A4DN.Core.BOS.FrameworkEntity;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using A4DN.CF.WizardShared;
 using System.Text;
 using System.Windows.Forms;
+using GenerationWizardPlugin.Constants;
+using System;
 
 namespace GenerationWizardPlugin
 {
-    public class EasyBuyWizardDefaults_DB2Modern : AB_IGenerationWizardDefault
+    public class EasyBuyWizardDefaults_DB2Legacy : AB_IGenerationWizardDefault
     {
         internal enum Mode { InitialSetup, ColumnsChanged };
 
         // Generation Wizard Shared Data
         internal readonly AB_GenerationWizardShared WizardShared = new AB_GenerationWizardShared();
 
+        #region Required Methods
+
         /// <summary>
         /// Accelerator Method <c>am_Initialize</c>: initialize.
         /// </summary>
         /// <param name="generationWizardShared">The generation wizard shared.</param>
-        public virtual void am_Initialize(AB_GenerationWizardShared generationWizardShared)
+        public void am_Initialize(AB_GenerationWizardShared generationWizardShared)
         {
+            // Relationships are pulled from the database access routes. If no relationships are defined on the database, you can define the relationships in the _GetDatabaseRelationships method.
+            generationWizardShared.ap_DatabaseRelationships = _GetDatabaseRelationships();
         }
 
         /// <summary>
@@ -30,7 +37,7 @@ namespace GenerationWizardPlugin
         /// <remarks>This method is called when no keys are found on the table or physical file. Returning True will prompt the user to select the keys. You can set the keys in this method and then return false to not show the prompt</remarks>
         /// <param name="moduleEntity">The module entity.</param>
         /// <returns><c>true</c> if you want to prompt the user to specify the keys, <c>false</c> if you can specify the keys in this method.</returns>
-        public virtual bool am_PromptForKeysIfNoneSpecified(AB_GenerationModuleEntity moduleEntity)
+        public bool am_PromptForKeysIfNoneSpecified(AB_GenerationModuleEntity moduleEntity)
         {
             return true;
         }
@@ -41,14 +48,17 @@ namespace GenerationWizardPlugin
         /// <remarks>This method is called Before the module is added to the module manager. You can return false if you don't want the module to be added.</remarks>
         /// <param name="moduleEntity">The module entity.</param>
         /// <returns><c>true</c> if you want to add the module to the module manager, <c>false</c> otherwise.</returns>
-        public virtual bool am_AllowAddModule(AB_GenerationModuleEntity moduleEntity)
+        public bool am_AllowAddModule(AB_GenerationModuleEntity moduleEntity)
         {
-            if (moduleEntity.FileName == "sysdiagrams")
+            switch (moduleEntity.FileName)
             {
-                return false;
-            }
+                //Add a case for every module that shouldn't be allowed
+                case "sysdiagrams":
+                    return false;
 
-            return true;
+                default:
+                    return true;
+            }
         }
 
         /// <summary>
@@ -56,17 +66,18 @@ namespace GenerationWizardPlugin
         /// </summary>
         /// <param name="moduleEntity">Module Entity that is being added to the Module Manager</param>
         /// <returns></returns>
-        public virtual void am_SetDefaultForModule(AB_GenerationModuleEntity moduleEntity)
+        public void am_SetDefaultForModule(AB_GenerationModuleEntity moduleEntity)
         {
-            if (moduleEntity == null) return;
-            if (moduleEntity.AllColumns == null) return;
+            if (moduleEntity == null || moduleEntity.AllColumns == null) return;
 
             // Set Module Level Rules before Column Rules
             SetModuleRulesBeforeColumnRules(Mode.InitialSetup, moduleEntity);
 
-            // Set Generation defaults for each Column
             foreach (var viewColumnEntity in moduleEntity.AllColumns)
+            {
+                // Set Generation defaults for each Column
                 SetColumnRules(Mode.InitialSetup, moduleEntity, viewColumnEntity);
+            }
 
             // Set Module Level Rules after Column Rules
             SetModuleRulesAfterColumnRules(Mode.InitialSetup, moduleEntity);
@@ -77,17 +88,18 @@ namespace GenerationWizardPlugin
         /// </summary>
         /// <param name="moduleEntity">Module Entity that contains the added or removed column</param>
         /// <returns></returns>
-        public virtual void am_ViewColumnsAddedToModule(AB_GenerationModuleEntity moduleEntity)
+        public void am_ViewColumnsAddedToModule(AB_GenerationModuleEntity moduleEntity)
         {
-            if (moduleEntity == null) return;
-            if (moduleEntity.AllColumns == null) return;
+            if (moduleEntity == null || moduleEntity.AllColumns == null) return;
 
             // Set Module Level Rules before Column Rules
             SetModuleRulesBeforeColumnRules(Mode.ColumnsChanged, moduleEntity);
 
-            // Set Generation defaults for each Column
             foreach (var viewColumnEntity in moduleEntity.AllColumns)
+            {
+                // Set Generation defaults for each Column
                 SetColumnRules(Mode.ColumnsChanged, moduleEntity, viewColumnEntity);
+            }
 
             // Set Module Level Rules after Column Rules
             SetModuleRulesAfterColumnRules(Mode.ColumnsChanged, moduleEntity);
@@ -98,13 +110,13 @@ namespace GenerationWizardPlugin
         /// </summary>
         /// <param name="moduleEntity">The module entity.</param>
         /// <param name="joinField">The join field.</param>
-        public virtual void am_BeforeAddJoinColumnToModule(AB_GenerationModuleEntity moduleEntity, AB_GenerationViewColumnEntity joinField)
+        public void am_BeforeAddJoinColumnToModule(AB_GenerationModuleEntity moduleEntity, AB_GenerationViewColumnEntity joinField)
         {
             // Use the foreign key name minus the "id". Concat with "Name" if that exists in join field description, otherwise use full joinfield description
-
             var cd = joinField.JoinRelationship.KeyMaps.FirstOrDefault().SelectedForeignKeyViewColumn.ColumnDescription;
             if (cd.ToUpper().EndsWith("INTERNAL ID")) { cd = cd.Remove(cd.Length - 11).TrimEnd(); }
 
+            // Gets the foreign key name and removes "Internal ID" from the end
             var ep = joinField.JoinRelationship.KeyMaps.FirstOrDefault().SelectedForeignKeyViewColumn.EntityPropertyName;
             if (ep.ToUpper().EndsWith("INTERNALID")) { ep = ep.Remove(ep.Length - 10).TrimEnd(); }
 
@@ -124,21 +136,30 @@ namespace GenerationWizardPlugin
         /// Accelerator Method <c>am_AllModulesCompletedLoading</c>: This method is called after all modules completed being added to the module manager
         /// </summary>
         /// <param name="generationModuleCollection">The generation module collection.</param>
-        public virtual void am_AllModulesCompletedLoading(ObservableCollection<AB_GenerationModuleEntity> generationModuleCollection)
+        public void am_AllModulesCompletedLoading(ObservableCollection<AB_GenerationModuleEntity> generationModuleCollection)
         {
+
         }
+
+        #endregion
 
         #region Rules
 
-        private void SetModuleRulesBeforeColumnRules(Mode mode, AB_GenerationModuleEntity moduleEntity)
+        internal void SetModuleRulesBeforeColumnRules(Mode mode, AB_GenerationModuleEntity moduleEntity)
         {
             switch (mode)
             {
                 case Mode.InitialSetup:
+                    // Set Module Name.  This will also set the image name
+                    moduleEntity.ModuleName = FormatModuleName(moduleEntity.FileDescription);
+
+                    // Set the Module Description to Module Name
+                    moduleEntity.ModuleDescription = moduleEntity.ModuleName;
 
                     // Module has Auto Generated Keys
                     moduleEntity.FileHasAutoGeneratedKey = true;
 
+                    moduleEntity.DetailLabelPosition = AB_GenerationModuleEntity.AB_LabelPosition.Left;
                     break;
 
                 case Mode.ColumnsChanged:
@@ -146,21 +167,19 @@ namespace GenerationWizardPlugin
             }
         }
 
-        private void SetColumnRules(Mode mode, AB_GenerationModuleEntity moduleEntity, AB_GenerationViewColumnEntity viewColumnEntity)
+        internal void SetColumnRules(Mode mode, AB_GenerationModuleEntity moduleEntity, AB_GenerationViewColumnEntity viewColumnEntity)
         {
-            viewColumnEntity.IsTitleField = IsDetailTitleField(viewColumnEntity);
+			var currentTable = (EasyBuyTable)Enum.Parse(typeof(EasyBuyTable), moduleEntity.TableDescription.Replace(" ", ""));
 
-            //If not a title field, then hide on small devices
-            if (!viewColumnEntity.IsTitleField) viewColumnEntity.WebMarkupTHDataAttributes = "data-hide=\"phone,tablet\"";
-
-            switch (mode)
+			switch (mode)
             {
                 case Mode.InitialSetup:
-
+                    // SetAdd Attribute [AB_AutoIncremented] to Identity Field
                     if (IsIdentityField(viewColumnEntity))
                     {
-                        viewColumnEntity.IsIdentity = true;
+                        viewColumnEntity.IsIdentity = false;
                         viewColumnEntity.IsRequiredField = false;
+                        viewColumnEntity.IsAutoIncrementedInCode = true;
                     }
 
                     if (IsAuditTabField(viewColumnEntity))
@@ -203,22 +222,48 @@ namespace GenerationWizardPlugin
                         viewColumnEntity.Visible = false;
                     }
 
-                    // This is done to eliminate conflicts with having the Internal ID referenced multiple times in the Module for each join.
+                    // This is done to eliminate conflicts with having the Internal ID referenced multiple times in a file
                     if (viewColumnEntity.EntityPropertyName.ToUpper() == "INTERNALID")
                     {
                         viewColumnEntity.EntityPropertyName = moduleEntity.ModuleName.Replace(" ", "") + "InternalID";
                         viewColumnEntity.ColumnDescription = moduleEntity.ModuleName + " Internal ID";
                     }
 
-                    // Set TimeStamp, TIMESTMP, Type fields to DateTime
-                    if (viewColumnEntity.Type.Contains("TIMESTMP"))
+                    // Set Numeric(8) date fields as Property Type of DateTime and Field Visualization of Date
+                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "DT") && ((viewColumnEntity.Type == "NUMERIC(8.0)") || viewColumnEntity.Type == "DATE(4)"))
                     {
-                        //viewColumnEntity.PropertyType = AB_PropertyTypes.DateTime;
-                        viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_DateTimePickerWithLabel;
+                        viewColumnEntity.PropertyType = AB_PropertyTypes.DateTime;
+                        viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_DatePicker;
+
+                        if ((viewColumnEntity.Type == "NUMERIC(8.0)"))
+                        {
+                            viewColumnEntity.AdditionalDataMapParameters = "databaseFieldType: AB_EntityFieldType.Decimal";
+                        }
+                    }
+
+                    // Set Numeric(6) Time fields as Property Type of TimeSpan and Field Visualization of Time
+                    if ((viewColumnEntity.Name.Substring(viewColumnEntity.Name.Length - 2) == "TM") && (viewColumnEntity.Type == "NUMERIC(6.0)"))
+                    {
+                        viewColumnEntity.PropertyType = AB_PropertyTypes.TimeSpan;
+                        viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_TimePicker;
+                        viewColumnEntity.AdditionalDataMapParameters = "databaseFieldType: AB_EntityFieldType.Decimal";
+                    }
+
+                    // Uncheck Memo Field from Content Window and Search Explorer Bar
+                    if (viewColumnEntity.ViewField.EndsWith("M1") && viewColumnEntity.FieldLength == 100)
+                    {
+                        viewColumnEntity.IsContentWindowField = false;
+                        viewColumnEntity.IsExplorerBarField = false;
+                    }
+
+                    // Uncheck Image Path from Search Explorer Bar
+                    if (viewColumnEntity.ViewField.EndsWith("IMPT") && viewColumnEntity.FieldLength == 256)
+                    {
+                        viewColumnEntity.IsExplorerBarField = false;
                     }
 
                     // Uncheck Warehouse ID and Sales Person ID Fields from Content Window, Search Explorer Bar and Detail
-                    if (viewColumnEntity.ViewField == "WarhouseInternalID" || viewColumnEntity.ViewField == "SalesPersonInternalID")
+                    if (viewColumnEntity.ViewField.EndsWith("YD1O1WID") || viewColumnEntity.ViewField.EndsWith("YD1O1AID"))
                     {
                         viewColumnEntity.IsContentWindowField = false;
                         viewColumnEntity.IsExplorerBarField = false;
@@ -226,36 +271,42 @@ namespace GenerationWizardPlugin
                         viewColumnEntity.IsAuditStampField = false;
                     }
 
-                    // Set Fields in Title Required
-                    if (viewColumnEntity.IsTitleField && !viewColumnEntity.IsIdentity)
+                    // Set Nick Name Field to Visible False in Content Window
+                    if (viewColumnEntity.ViewField.EndsWith("NN") && viewColumnEntity.FieldLength == 50)
                     {
-                        viewColumnEntity.IsRequiredField = true;
-                    }
-                    else
-                    {
-                        viewColumnEntity.IsRequiredField = false;
+                        viewColumnEntity.Visible = false;
                     }
 
-                    // Set Any Fields that are not audit stamps but end in "Date" or "Time" as Detail Title Fields
-                    if ((viewColumnEntity.ViewField.ToUpper().EndsWith("Date") || viewColumnEntity.ViewField.ToUpper().EndsWith("Time")) && !IsAuditTabField(viewColumnEntity))
+                    // Set Any Fields that are not audit stamps but end in "DT" or "TM" as Detail Title Fields
+                    if ((viewColumnEntity.ViewField.ToUpper().EndsWith("DT") || viewColumnEntity.ViewField.ToUpper().EndsWith("TM")) && !IsAuditTabField(viewColumnEntity))
                     {
                         viewColumnEntity.IsTitleField = true;
                     }
 
-					if (IsCurrencyField(viewColumnEntity))
-					{
-						viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Currency;
-					}
+					// Set Required Fields
+					var requiredFields = EasyBuyHelpers.GetRequiredFieldsForTable(currentTable);
+                    viewColumnEntity.IsRequiredField = requiredFields.Any(x => x == viewColumnEntity.ViewField);
+                    
+                    viewColumnEntity.IsTitleField = IsDetailTitleField(viewColumnEntity);
+                    if (!viewColumnEntity.IsTitleField)
+                    {
+                        //If not a title field, then hide on small devices
+                        viewColumnEntity.WebMarkupTHDataAttributes = "data-hide=\"phone,tablet\"";
+                    }
 
-					if (moduleEntity.TableName == "YD1I" && viewColumnEntity.NewEntityPropertyName == "DiscountPercent")
-					{
-						viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Percent;
-					}
+                    if (IsCurrencyField(viewColumnEntity))
+                    {
+                        viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Currency;
+                    }
+                    
+                    if (moduleEntity.TableName == "YD1I" && viewColumnEntity.NewEntityPropertyName == "DiscountPercent")
+                    {
+                        viewColumnEntity.FieldVisualization = AB_FieldVisualizations.AB_Percent;
+                    }
 
-					break;
+                    break;
 
                 case Mode.ColumnsChanged:
-
                     if (viewColumnEntity.IsVirtual)
                     {
                         //Do Not Check Virtuals on the Detail Tab
@@ -267,17 +318,22 @@ namespace GenerationWizardPlugin
                             foreach (var vce in from vcf in viewColumnEntity.VirtualCalculationFields where vcf.VirtualPropertyType == AB_VirtualPropertyType.Field from vce in moduleEntity.AllColumns where vce.EntityPropertyName == vcf.VirtualPropertyName select vce)
                             {
                                 vce.Visible = false;
-                                viewColumnEntity.ContentWindowDisplaySequence =
-                                    vce.ContentWindowDisplaySequence += 1;
+                                viewColumnEntity.ContentWindowDisplaySequence = vce.ContentWindowDisplaySequence += 1;
                             }
                         }
                     }
 
+                    //We have to run this again here since CodeFactory overrides this setting
+                    if (viewColumnEntity.ViewField.EndsWith("M1") && viewColumnEntity.FieldLength == 100)
+                    {
+                        viewColumnEntity.IsContentWindowField = false;
+                        viewColumnEntity.IsExplorerBarField = false;
+                    }
                     break;
             }
         }
 
-        private void SetModuleRulesAfterColumnRules(Mode mode, AB_GenerationModuleEntity moduleEntity)
+        internal void SetModuleRulesAfterColumnRules(Mode mode, AB_GenerationModuleEntity moduleEntity)
         {
             switch (mode)
             {
@@ -302,6 +358,7 @@ namespace GenerationWizardPlugin
                         foreach (var ddViewFields in dd.DropDownViewFields.Where(ddViewFields => ddViewFields.ColumnDescription.ToUpper().Equals("NAME")))
                         {
                             dd.DropDownLabel = moduleEntity.ModuleName + " " + ddViewFields.ColumnDescription;
+
                             break;
                         }
                     }
@@ -330,10 +387,10 @@ namespace GenerationWizardPlugin
         /// <param name="moduleEntity">Module Entity</param>
         /// <returns></returns>
         private void _SetDefaultView(AB_GenerationModuleExplorerViewEntity viewEntity, AB_GenerationModuleEntity moduleEntity)
-        {
-            const string defaultViewSuffix = "Name";
+		{
+            const string defaultViewSuffix = "LF1";
 
-            if (viewEntity.ViewName.ToUpper().EndsWith(defaultViewSuffix.ToUpper()) && viewEntity.Description.ToUpper().EndsWith(defaultViewSuffix.ToUpper()))
+            if (viewEntity.ViewName.ToUpper().EndsWith(defaultViewSuffix.ToUpper()) && viewEntity.Description.ToUpper().Contains("NAME"))
             {
                 if (!_defaultViewSet)
                 {
@@ -343,7 +400,58 @@ namespace GenerationWizardPlugin
             }
         }
 
-        #endregion Rules
+        #endregion
+
+        #region Relationships
+
+        private ObservableCollection<AB_SchemaRelationshipEntity> _GetDatabaseRelationships()
+        {
+            var relationships = new ObservableCollection<AB_SchemaRelationshipEntity>();
+
+            // Customers have One to Many Orders
+            relationships.Add(_AddRelationship("EASYBUYDEM", "YD1C", "YD1CIID", "EASYBUYDEM", "YD1O", "YD1O1CID", SchemaRelationshipType.OneToMany));
+            // Customers have One to Many Shipping Addresses
+            relationships.Add(_AddRelationship("EASYBUYDEM", "YD1C", "YD1CIID", "EASYBUYDEM", "YD1S", "YD1S1CID", SchemaRelationshipType.OneToMany));
+            // Customers have Sub Customers
+            relationships.Add(_AddRelationship("EASYBUYDEM", "YD1C", "YD1CIID", "EASYBUYDEM", "YD1C", "YD1CPTID", SchemaRelationshipType.OneToMany));
+            // Orders have One to Many Order Items
+            relationships.Add(_AddRelationship("EASYBUYDEM", "YD1O", "YD1OIID", "EASYBUYDEM", "YD1I", "YD1I1OID", SchemaRelationshipType.OneToMany));
+            // Products have One to Many Order Items
+            relationships.Add(_AddRelationship("EASYBUYDEM", "YD1P", "YD1PIID", "EASYBUYDEM", "YD1I", "YD1I1PID", SchemaRelationshipType.OneToMany));
+            // Shipping Addresses have One to Many Order
+            relationships.Add(_AddRelationship("EASYBUYDEM", "YD1S", "YD1SIID", "EASYBUYDEM", "YD1O", "YD1O1SID", SchemaRelationshipType.OneToMany));
+
+            // Customers have One to Many Orders
+            relationships.Add(_AddRelationship("EASYBUYDEV", "YD1C", "YD1CIID", "EASYBUYDEV", "YD1O", "YD1O1CID", SchemaRelationshipType.OneToMany));
+            // Customers have One to Many Shipping Addresses
+            relationships.Add(_AddRelationship("EASYBUYDEV", "YD1C", "YD1CIID", "EASYBUYDEV", "YD1S", "YD1S1CID", SchemaRelationshipType.OneToMany));
+            // Customers have Customer
+            relationships.Add(_AddRelationship("EASYBUYDEV", "YD1C", "YD1CIID", "EASYBUYDEV", "YD1C", "YD1CPTID", SchemaRelationshipType.OneToMany));
+            // Orders have One to Many Order Items
+            relationships.Add(_AddRelationship("EASYBUYDEV", "YD1O", "YD1OIID", "EASYBUYDEV", "YD1I", "YD1I1OID", SchemaRelationshipType.OneToMany));
+            // Products have One to Many Order Items
+            relationships.Add(_AddRelationship("EASYBUYDEV", "YD1P", "YD1PIID", "EASYBUYDEV", "YD1I", "YD1I1PID", SchemaRelationshipType.OneToMany));
+            // Shipping Addresses have One to Many Order
+            relationships.Add(_AddRelationship("EASYBUYDEV", "YD1S", "YD1SIID", "EASYBUYDEV", "YD1O", "YD1O1SID", SchemaRelationshipType.OneToMany));
+
+            return relationships;
+        }
+
+        private AB_SchemaRelationshipEntity _AddRelationship(string primarySchema, string primaryTable, string primaryKeyColumn, string foreignSchema, string foreignTable, string foreignKeyColumn, SchemaRelationshipType relationshipType)
+        {
+            return new AB_SchemaRelationshipEntity()
+            {
+                PrimarySchema = primarySchema,
+                PrimaryTable = primaryTable,
+                PrimaryKeyColumn = primaryKeyColumn,
+                ForeignSchema = foreignSchema,
+                ForeignTable = foreignTable,
+                ForeignKeyColumn = foreignKeyColumn,
+                RelationshipType = relationshipType,
+            };
+        }
+
+        #endregion Relationships
 
         #region Default Standards
 
@@ -386,14 +494,18 @@ namespace GenerationWizardPlugin
         }
 
         private Dictionary<string, AB_AuditStampTypes> _auditStamps = new Dictionary<string, AB_AuditStampTypes>
-        {
-            {"CreatedAt", AB_AuditStampTypes.CreateDate},
-            {"CreatedBy", AB_AuditStampTypes.CreateUser},
-            {"CreatedWith", AB_AuditStampTypes.Undefined},
-            {"LastModifiedAt", AB_AuditStampTypes.LastChangeDate},
-            {"LastModifiedBy", AB_AuditStampTypes.LastChangeUser},
-            {"LastModifiedWith", AB_AuditStampTypes.Undefined},
-        };
+            {
+                {"CRDT", AB_AuditStampTypes.CreateDate},
+                {"CRTM", AB_AuditStampTypes.CreateTime},
+                {"CRUS", AB_AuditStampTypes.CreateUser},
+                {"CRJB", AB_AuditStampTypes.Undefined},
+                {"CRJN", AB_AuditStampTypes.Undefined},
+                {"LCDT", AB_AuditStampTypes.LastChangeDate},
+                {"LCTM", AB_AuditStampTypes.LastChangeTime},
+                {"LCUS", AB_AuditStampTypes.LastChangeUser},
+                {"LCJB", AB_AuditStampTypes.Undefined},
+                {"LCJN", AB_AuditStampTypes.Undefined},
+            };
 
         /// <summary>
         /// Logic to determine if the field should go on the Audit Stamp Tab
@@ -427,7 +539,8 @@ namespace GenerationWizardPlugin
 
         private List<string> _extendedContentWindowField = new List<string>
             {
-                "ID"
+                "PTID",
+                "PTRL"
             };
 
         /// <summary>
@@ -454,6 +567,8 @@ namespace GenerationWizardPlugin
 
         private List<string> _extendedSearchField = new List<string>
         {
+            "PTID",
+            "PTRL"
         };
 
         /// <summary>
@@ -479,11 +594,11 @@ namespace GenerationWizardPlugin
         }
 
         private List<string> _detailTitleField = new List<string>
-        {
-            "Name",
-            "LastName",
-            "FirstName"
-        };
+            {
+                "NM",
+                "NLN",
+                "NFN"
+            };
 
         /// <summary>
         /// Logic to determine if the field is a Title Field
