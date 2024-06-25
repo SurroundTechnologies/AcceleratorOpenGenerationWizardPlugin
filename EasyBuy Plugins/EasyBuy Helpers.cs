@@ -1,10 +1,12 @@
-﻿using System;
+﻿using A4DN.Core.BOS.NPOI.Excel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
-namespace GenerationWizardPlugin.Constants
+namespace GenerationWizardPlugin.EBHelpers
 {
 	public enum EasyBuyTable
 	{
@@ -17,6 +19,51 @@ namespace GenerationWizardPlugin.Constants
 
 	public static class EasyBuyHelpers
 	{
+		public static void InitializeExcelConstants()
+		{
+            try
+            {
+                var constantsWorkbook = new AB_NPOIExcel().am_OpenWorkbook("C:\\Surround\\AcceleratorOpenGenerationWizardPlugin\\EasyBuyConstants.xlsx");
+
+                var constantsSheet_Customer = constantsWorkbook?.GetSheet("Customer");
+                var constantsSheet_ShippingAddress = constantsWorkbook?.GetSheet("Shipping Address");
+                var constantsSheet_Product = constantsWorkbook?.GetSheet("Product");
+                var constantsSheet_Order = constantsWorkbook?.GetSheet("Order");
+                var constantsSheet_OrderItem = constantsWorkbook?.GetSheet("Order Item");
+                var constantsSheet_Shared = constantsWorkbook?.GetSheet("Shared Constants");
+
+				//constantsWorkbook.GetName()
+
+
+
+
+                //if (npoiExcelSheet != null)
+                //{
+                //    for (int row = 1; row <= npoiExcelSheet.LastRowNum; row++)
+                //    {
+                //        if (npoiExcelSheet.GetRow(row) != null) //null is when the row only contains empty cells
+                //        {
+                //            var file = npoiExcelSheet.GetRow(row).GetCell(0)?.StringCellValue;
+                //            var keys = npoiExcelSheet.GetRow(row).GetCell(1)?.StringCellValue;
+
+                //            if (!_FileKeys.ContainsKey(file))
+                //            {
+                //                _FileKeys.Add(file, keys);
+                //            }
+                //        }
+                //    }
+                //}
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+
+
+
+
 		public static List<string> GetRequiredFieldsForTable(EasyBuyTable table, bool getSystemDescription = false)
 		{
 			switch (table)

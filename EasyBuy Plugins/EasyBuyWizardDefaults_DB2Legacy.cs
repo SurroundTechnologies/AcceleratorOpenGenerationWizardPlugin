@@ -7,7 +7,7 @@ using System.Linq;
 using A4DN.CF.WizardShared;
 using System.Text;
 using System.Windows.Forms;
-using GenerationWizardPlugin.Constants;
+using GenerationWizardPlugin.EBHelpers;
 using System;
 
 namespace GenerationWizardPlugin
@@ -29,6 +29,8 @@ namespace GenerationWizardPlugin
         {
             // Relationships are pulled from the database access routes. If no relationships are defined on the database, you can define the relationships in the _GetDatabaseRelationships method.
             generationWizardShared.ap_DatabaseRelationships = _GetDatabaseRelationships();
+
+            EasyBuyHelpers.InitializeExcelConstants();
         }
 
         /// <summary>

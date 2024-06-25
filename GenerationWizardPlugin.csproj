@@ -134,7 +134,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EasyBuy Plugins\EasyBuy Constants.cs" />
+    <Compile Include="EasyBuy Plugins\EasyBuy Helpers.cs" />
     <Compile Include="EasyBuy Plugins\EasyBuyWizardDefaults_DB2Modern.cs" />
     <Compile Include="WizardDefaultsTemplate.cs" />
     <Compile Include="Old Plugins\EasyBuyWizardDefaults_DB2LegacyOLD.cs" />
