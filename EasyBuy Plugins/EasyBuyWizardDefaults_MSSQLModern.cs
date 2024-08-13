@@ -1,14 +1,15 @@
-﻿using A4DN.Core.BOS.Base;
+﻿using A4DN.CF.WizardShared;
+using A4DN.Core.BOS.Base;
 using A4DN.Core.BOS.FrameworkEntity;
-using System.Collections.ObjectModel;
-using System.Linq;
-using A4DN.CF.WizardShared;
 using GenerationWizardPlugin.EBHelpers;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace GenerationWizardPlugin
 {
-    public class EasyBuyWizardDefaults_MSSQLLegacy : AB_IGenerationWizardDefault
+	public class EasyBuyWizardDefaults_MSSQLModern : AB_IGenerationWizardDefault
 	{
 		internal enum Mode { InitialSetup, ColumnsChanged };
 
@@ -18,12 +19,12 @@ namespace GenerationWizardPlugin
 		#region Required Methods
 
 		public void am_Initialize(AB_GenerationWizardShared generationWizardShared)
-        {
-            // Relationships are pulled from the database access routes. If no relationships are defined on the database, you can define the relationships with the GetDatabaseRelationships method.
-            generationWizardShared.ap_DatabaseRelationships = EasyBuyHelpers.GetDatabaseRelationships(DBBrand.MSSQL, "dbo");
+		{
+			// Relationships are pulled from the database access routes. If no relationships are defined on the database, you can define the relationships with the GetDatabaseRelationships method.
+			//generationWizardShared.ap_DatabaseRelationships = EasyBuyHelpers.GetDatabaseRelationships(DBBrand.MSSQL, "dbo");
 
-			EasyBuyHelpers.InitializeExcelConstants(DBType.Legacy);
-        }
+			EasyBuyHelpers.InitializeExcelConstants(DBType.Modern);
+		}
 
 		public bool am_PromptForKeysIfNoneSpecified(AB_GenerationModuleEntity ModuleEntity)
 		{
@@ -68,7 +69,7 @@ namespace GenerationWizardPlugin
 			// Set Generation defaults for each Column
 			foreach (var viewColumnEntity in moduleEntity.AllColumns)
 				SetColumnRules(Mode.ColumnsChanged, moduleEntity, viewColumnEntity);
-			
+
 			// Set Module Level Rules after Column Rules
 			SetModuleRulesAfterColumnRules(Mode.ColumnsChanged, moduleEntity);
 		}
@@ -237,7 +238,7 @@ namespace GenerationWizardPlugin
 					}
 
 					// If the field has not already been set to a Title Field, set any Date or Time fields that are not Audit Stamps to be added to the title
-					if(!viewColumnEntity.IsTitleField)
+					if (!viewColumnEntity.IsTitleField)
 						viewColumnEntity.IsTitleField = (viewColumnEntity.IsFieldMatch(dateFields) || viewColumnEntity.IsFieldMatch(timeFields)) && !viewColumnEntity.IsFieldMatch(auditFields);
 
 					break;
